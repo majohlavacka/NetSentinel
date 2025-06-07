@@ -33,7 +33,14 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 
 ## Využitý hardware
 - `Raspberry Pi 3`
+- `Micro SD karta 16 GB`
 - `Napájací adapter 5V 2.5A micro USB`
+
+<p align="center">
+  <img src="Pictures/RPi.PNG" alt="Obrázok 1 Raspberry Pi" width="700"/>
+  <br>
+  <i>Obrázok 1 Raspberry Pi 3</i>
+</p>
 
 ## Grafický postup a testovanie
 
