@@ -43,6 +43,14 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 </p>
 
 ## Grafický postup a testovanie
+- Ako prvé potrebujeme nainštalovať Raspberry Pi OS na SD kartu, prostredníctvom RPi Imageru, ktorý je dostupný na: `https://www.raspberrypi.com/software/`
+- Pre náš projekt sme zvolili zariadenie `RPi 3` a OS `32-bit`.
+  
+<p align="center">
+  <img src="Pictures/Imager.PNG" alt="Obrázok 2 RPi Imager" width="700"/>
+  <br>
+  <i>Obrázok 2 RPi Imager 3</i>
+</p>
 
 ## Vylepšenia do budúcnosti 
 - Zachytávanie podozrivej aktivity aj na iné zariadenia ako RPI, prostredníctvom WLAN adaptéru, ktorý umožňuje monitor mode (chipset `Atheros AR9271`).
