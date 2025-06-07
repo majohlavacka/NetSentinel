@@ -49,7 +49,7 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 <p align="center">
   <img src="Pictures/Imager.PNG" alt="Obrázok 2 RPi Imager" width="700"/>
   <br>
-  <i>Obrázok 2 RPi Imager 3</i>
+  <i>Obrázok 2 RPi Imager</i>
 </p>
 
 ## Vylepšenia do budúcnosti 
