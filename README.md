@@ -15,6 +15,10 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 - V rámci roomky `Alerts` prejdite do `Edit channel` ->  `Integrations` -> `Webhooks` a vytvorte novy Webhook. 
 - Vytvorte súbor `.env` a vložte do neho `DISCORD_WEBHOOK_URL = URL_LINK_DC_ROOMKY`.
 
+## Komunikácia s Raspberry Pi
+- Keďže nepoužívame LCD displej ani monitor, potrebujeme mať aktívny port 22 (SSH), ku ktorému sa budeme pripájať pomocou nástroja `Putty`.
+- Pre SSH prístup na RPi sme nastavili bezpečnostné opatrenia v konfiguračnom súbore SSH a tiež sme nakonfigurovali firewall tak, aby bol prístup povolený len z konkrétnych IP adries.
+
 ## Funkcie 
 - `Detekcia ARP Spoofingu`
 - `Detekcia port scanningu`
