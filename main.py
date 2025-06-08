@@ -52,8 +52,8 @@ def alert_callback(msg):
 
 
 # Funkcie pre jednotlivé typy útokov
-def portscan_alert(ip):
-    alert_callback(f"[ALERT] Possible port scan from IP {ip}")
+def portscan_alert(msg):
+    alert_callback(msg)
 
 def arp_spoof_alert(msg):
     alert_callback(msg)
