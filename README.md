@@ -52,6 +52,30 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
   <i>Obrázok 2 RPi Imager</i>
 </p>
 
+- Úvodná obrazovka v termináli na Raspberry Pi po spustení aplikácie.
+
+<p align="center">
+  <img src="Pictures/Welcome.PNG" alt="Obrázok 3 Welcome in NetSentinel" width="700"/>
+  <br>
+  <i>Obrázok 3 Welcome in NetSentinel</i>
+</p>
+
+- Monitoring je aktívny a čaká na detekciu podozrivého správania.
+
+<p align="center">
+  <img src="Pictures/Monitoring.PNG" alt="Obrázok 4 Monitoring" width="700"/>
+  <br>
+  <i>Obrázok 4 Monitoring</i>
+</p>
+
+- Podozrivé správanie je odoslané do Discord roomky. Správa obsahuje IP adresu zariadenia, ktoré vykonáva podozrivú aktivitu a v prípade ARP útoku aj MAC adresu.
+
+<p align="center">
+  <img src="Pictures/Discord.PNG" alt="Obrázok 5 Discord notifikácie o podozrivej aktivite" width="700"/>
+  <br>
+  <i>Obrázok 5 Discord notifikácie o podozrivej aktivite</i>
+</p>
+
 ## Vylepšenia do budúcnosti 
 - Zachytávanie podozrivej aktivity aj na iné zariadenia ako RPI, prostredníctvom WLAN adaptéru, ktorý umožňuje monitor mode (chipset `Atheros AR9271`).
 - Pridanie 3.5″ LCD displeju pre vizuálne zobrazenie upozornení.
