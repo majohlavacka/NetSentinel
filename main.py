@@ -35,7 +35,7 @@ def send_discord_alert(message: str):
     data = {"content": message}
     try:
         response = requests.post(DISCORD_WEBHOOK_URL, json=data)
-        if response.status_code != 204 and response.status_code != 200:
+        if response.status_code not in (200, 204):
             print(f"Chyba pri posielaní Discord alertu: {response.status_code} {response.text}")
     except Exception as e:
         print(f"Výnimka pri posielaní Discord alertu: {e}")
