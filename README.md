@@ -55,7 +55,7 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 - Úvodná obrazovka v termináli na Raspberry Pi po spustení aplikácie.
 
 <p align="center">
-  <img src="Pictures/elcome.PNG" alt="Obrázok 3 Welcome in NetSentinel" width="700"/>
+  <img src="Pictures/Welcome.PNG" alt="Obrázok 3 Welcome in NetSentinel" width="700"/>
   <br>
   <i>Obrázok 3 Welcome in NetSentinel</i>
 </p>
@@ -63,7 +63,7 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 - Monitoring je aktívny a čaká na detekciu podozrivého správania.
 
 <p align="center">
-  <img src="Pictures/onitoring.PNG" alt="Obrázok 4 Monitoring" width="700"/>
+  <img src="Pictures/Monitoring.PNG" alt="Obrázok 4 Monitoring" width="700"/>
   <br>
   <i>Obrázok 4 Monitoring</i>
 </p>
