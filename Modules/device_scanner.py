@@ -15,7 +15,6 @@ def _valid_mac(mac):
     return re.match(pattern, mac) is not None
 
 def scan_network(ip_range="10.0.2.0/24"):
-    print(f"[INFO] Scanning network {ip_range}...")
 
     # Vytvor ARP požiadavku pre zadaný IP rozsah
     arp = ARP(pdst=ip_range)
