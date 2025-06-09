@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
     # Po ukončení UI (napr. po stlačení 'x') - korektné zastavenie detektorov
     for det in detectors_instances:
-        det.stop()  # DOPLNENIE: zavolanie metódy stop pre každého detektora
+        det.stop()  # Zavolanie metódy stop pre každého detektora
 
     # Počkajte na dokončenie všetkých vlákien
     for t in threads:
