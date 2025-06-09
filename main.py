@@ -25,6 +25,9 @@ running = True
 
 # Načítanie Discord webhook URL z .env súboru
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+if not DISCORD_WEBHOOK_URL:
+    print("[ERROR] DISCORD_WEBHOOK_URL not set in environment variables.")  # Kontrola existence webhooku
+    exit(1)  # Ukončí program ak webhook nie je definovaný
 
 
 def send_discord_alert(message: str):
@@ -92,11 +95,10 @@ def main_interface(stdscr):
         "#          ##%%@        @#******#%        #%******#%        %%*@             #",
         "#              #@@@@@@@%%##%%#                #%##%%%@@@@@@@#                #",
         "#                                                                            #",
-        "#                           ######################                           #",
-        "#                           #  NETSENTINEL v1.0  #                           #",
-        "#                           ######################                           #",
         "#                                                                            #",
-        "##############################################################################"
+        "#                                                          NETSENTINEL v1.0  #",
+        "#                                                                            #",
+        "##############################################################################",
     ]
 
     # Vypíš splash_screen na stred obrazovky
@@ -107,6 +109,8 @@ def main_interface(stdscr):
         stdscr.addstr(start_y + i, x, line)
     stdscr.refresh()
     time.sleep(4)
+
+    dot_count = 0  # Pridane pre animaciu bodiek za Monitoring
 
     while running:
         stdscr.clear()
@@ -121,7 +125,9 @@ def main_interface(stdscr):
             stdscr.addstr(2, 0, "Press 'b' to return to monitoring...")
         else:
             # Monitoring beží
-            stdscr.addstr(0, 0, "Monitoring...")
+            dot_count = (dot_count + 1) % 4  # 0,1,2,3 cyklus pre bodky
+            dots = '.' * dot_count
+            stdscr.addstr(0, 0, "Monitoring" + dots)
 
             # Čitateľné ovládanie (usporiadané)
             controls = "Controls: [d] Scan network | [b] Back | [x] Exit"
@@ -145,7 +151,8 @@ def main_interface(stdscr):
                         stdscr.addstr(0, 0, info_msg)
                         stdscr.refresh()
 
-                        devices = scan_network("10.0.2.0/24")
+                        # Volanie scan_network priamo, čaká synchronne na výsledok
+                        devices = scan_network("10.0.2.0/24")  # UPRAVA: synchronný scan, môže spomaliť UI
 
                         stdscr.clear()
                         stdscr.addstr(0, 0, "Connected Devices on Network (10.0.2.0/24):")
@@ -185,7 +192,7 @@ def main_interface(stdscr):
         except Exception as e:
             print(f"Error in main interface loop: {e}")
 
-        time.sleep(0.1)  # Trochu menšia pauza na plynulejší beh
+        time.sleep(0.5)  # Spomalí sa reakcia používateľského rozhrania (napr. bodky budú pomalšie), zároveň sa ušetrí CPU záťaž
 
 
 if __name__ == "__main__":
@@ -194,7 +201,7 @@ if __name__ == "__main__":
 
     # Zoznam detektorov a ich callback funkcií
     detectors = [
-        (PortScanDetector, portscan_alert, ()),
+        (PortScanDetector, portscan_alert, ()), 
         (ARPSpoofDetector, arp_spoof_alert, ()),
         (ICMPFloodDetector, icmp_flood_alert, ()),
     ]
@@ -205,21 +212,23 @@ if __name__ == "__main__":
         alert_func = det[1] # Zober funkciu, ktorá sa má zavolať pri alerte
         args = det[2] if len(det) > 2 else () # Ak sú špeciálne argumenty, zober ich
         kwargs = det[3] if len(det) > 3 else {} # Ak sú kľúčové argumenty, zober ich tiež
-        
-        detector_instance = cls(*args, **kwargs)
-        detector_instance.alert_callback = alert_func
-        detectors_instances.append(detector_instance)
 
-        t = threading.Thread(target=run_detector, args=(detector_instance,), daemon=False) # bežné vlákno
-        t.start()
-        threads.append(t)
+        detector_instance = cls(*args, **kwargs) # Vytvorenie inštancie detektora s parametrami (args a kwargs)
+        detector_instance.alert_callback = alert_func # Nastavenie callback funkcie, ktorá sa zavolá pri detekcii útoku (alert)
+        detectors_instances.append(detector_instance) # Uloženie inštancie detektora do zoznamu, aby sme s ňou mohli neskôr pracovať (napr. zastaviť ho)
+
+	# Vytvorenie a spustenie nového vlákna, ktoré spustí metódu start detektora
+	# run_detector() zavolá detektor_instance.start() (spustí detekciu)	
+        t = threading.Thread(target=run_detector, args=(detector_instance,), daemon=False)
+        t.start() # Štart vlákna, ktoré beží súbežne s hlavným programom
+        threads.append(t) # Toto nám umožní neskôr na všetky tieto vlákna počkať (join), aby sa správne ukončili pred ukončením celého programu.
 
     # Spustenie UI
     curses.wrapper(main_interface)
 
     # Po ukončení UI (napr. po stlačení 'x') - korektné zastavenie detektorov
     for det in detectors_instances:
-        det.stop()
+        det.stop()  # DOPLNENIE: zavolanie metódy stop pre každého detektora
 
     # Počkajte na dokončenie všetkých vlákien
     for t in threads:

@@ -1,4 +1,4 @@
-from scapy.all import ARP, sniff, arping
+from scapy.all import ARP, AsyncSniffer, arping
 import threading
 import time
 import re
@@ -13,8 +13,10 @@ class ARPSpoofDetector:
         self.last_alert_time = {}
         # Interval medzi alertami pre tú istú IP v sekundách
         self.alert_cooldown = 10
-        # Flag na riadenie behu sniffu
+        # Flag na riadenie behu
         self.running = False
+        # AsyncSniffer inštancia
+        self.sniffer = None
 
     def _valid_ip(self, ip):
         # Regex validácia IPv4 adresy pre kontrolu správnosti formátu
@@ -76,20 +78,27 @@ class ARPSpoofDetector:
     def start(self, iface=None, network="10.0.2.0/24"):
         """
         Hlavná funkcia – najprv si načítame legitímne IP-MAC adresy a potom počúvame ARP odpovede.
-        Používame stop_filter na bezpečné ukončenie sniffu.
+        Teraz používame AsyncSniffer pre bezpečné a rýchle ukončenie.
         """
         self.running = True
         self.preload_known_macs(network)  # naskenujeme sieť na začiatku
 
-        def stop_filter(pkt):
-            # Keď self.running je False, sniff skončí
-            return not self.running
-
-        sniff(prn=self.packet_callback, filter="arp", store=False, iface=iface, stop_filter=stop_filter)
+        # Inicializujeme asynchrónny sniffer
+        self.sniffer = AsyncSniffer(
+            prn=self.packet_callback,
+            filter="arp",
+            store=False,
+            iface=iface
+        )
+        # AsyncSniffer spúšťa zachytávanie paketov na pozadí (v samostatnom vlákne),
+	# takže hlavný program môže pokračovať bez blokovania.
+        self.sniffer.start()
 
     def stop(self):
         """
         Funkcia na zastavenie sniffovania.
-        Nastaví flag, ktorý spôsobí ukončenie sniffu.
+        Bezpečne zastaví AsyncSniffer.
         """
         self.running = False
+        if self.sniffer and self.sniffer.running:
+            self.sniffer.stop()

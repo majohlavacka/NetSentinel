@@ -1,4 +1,4 @@
-from scapy.all import ICMP, IP, sniff
+from scapy.all import ICMP, IP, AsyncSniffer
 import time
 import re
 
@@ -10,8 +10,8 @@ class ICMPFloodDetector:
         self.alerted_ips = set()              # IP adresy, pre ktoré už bol alert odoslaný
         self.alert_callback = None            # Callback funkcia pre alerty
 
-        # Flag na kontrolu, či sniffovanie beží
-        self.running = False
+        self.running = False                  # Flag pre kontrolu behu
+        self.sniffer = None                   # AsyncSniffer inštancia
 
     def _valid_ip(self, ip):
         """
@@ -32,22 +32,21 @@ class ICMPFloodDetector:
             if pkt[ICMP].type == 8:
                 src_ip = pkt[IP].src
                 
-                # Validácia IP adresy pre bezpečnosť
                 if not self._valid_ip(src_ip):
-                    return  # Ignoruj pakety s neplatnou IP adresou
+                    return  # Ignoruj neplatné IP
 
                 now = time.time()
 
                 if src_ip not in self.icmp_requests:
                     self.icmp_requests[src_ip] = []
 
-                # Uložíme čas prijatia paketu
+                # Uloženie timestampu
                 self.icmp_requests[src_ip].append(now)
 
-                # Odstránime pakety staršie ako interval
+                # Vyčistenie starých timestampov mimo intervalu
                 self.icmp_requests[src_ip] = [t for t in self.icmp_requests[src_ip] if now - t <= self.interval]
 
-                # Ak počet paketov prekročí prah a pre IP ešte nebol alert
+                # Kontrola prahu
                 if len(self.icmp_requests[src_ip]) > self.threshold and src_ip not in self.alerted_ips:
                     self._alert(f"[ALERT] Possible ICMP flood from {src_ip}")
                     self.alerted_ips.add(src_ip)
@@ -63,18 +62,23 @@ class ICMPFloodDetector:
 
     def start(self, iface=None):
         """
-        Spustí zachytávanie paketov na danom rozhraní.
+        Spustí zachytávanie paketov na danom rozhraní pomocou AsyncSniffer.
         """
         self.running = True
-
-        def stop_filter(pkt):
-            # Ak running je False, ukonči sniffovanie
-            return not self.running
-
-        sniff(prn=self.packet_callback, iface=iface, store=False, stop_filter=stop_filter)
+        self.sniffer = AsyncSniffer(
+            prn=self.packet_callback,
+            store=False,
+            filter="icmp",
+            iface=iface
+        )
+        # AsyncSniffer spúšťa zachytávanie paketov na pozadí (v samostatnom vlákne),
+	# takže hlavný program môže pokračovať bez blokovania.
+        self.sniffer.start()
 
     def stop(self):
         """
-        Bezpečne zastaví sniffovanie nastavením flagu.
+        Bezpečne zastaví sniffovanie nastavením flagu a stopnutím AsyncSniffera.
         """
         self.running = False
+        if self.sniffer and self.sniffer.running:
+            self.sniffer.stop()
