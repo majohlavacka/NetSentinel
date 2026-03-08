@@ -2,6 +2,7 @@ from scapy.all import ARP, AsyncSniffer, arping
 import threading
 import time
 import re
+from collections import deque  # PRE GRAF
 
 class ARPSpoofDetector:
     def __init__(self):
@@ -18,12 +19,14 @@ class ARPSpoofDetector:
         # AsyncSniffer inštancia
         self.sniffer = None
 
+        # BUFFER PRE GRAF
+        self.packet_times = deque(maxlen=1000)
+
     def _valid_ip(self, ip):
         # Regex validácia IPv4 adresy pre kontrolu správnosti formátu
         pattern = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
         if not pattern.match(ip):
             return False
-        # kontrola, či každá časť je v rozsahu 0-255
         parts = ip.split('.')
         return all(0 <= int(part) <= 255 for part in parts)
 
@@ -41,64 +44,65 @@ class ARPSpoofDetector:
         for snd, rcv in ans:
             ip = rcv.psrc
             mac = rcv.hwsrc
-            # Validuj IP a MAC pred uložením
             if self._valid_ip(ip) and self._valid_mac(mac):
-                self.ip_mac_map[ip] = mac  # uložíme legitímnu MAC pre každú IP
+                self.ip_mac_map[ip] = mac
 
     def packet_callback(self, pkt):
         """
         Táto funkcia sa volá pri každom zachytenom ARP pakete.
         Skontroluje, či je odpoveď legitímna, alebo ide o spoofing.
         """
-        if pkt.haslayer(ARP) and pkt[ARP].op == 2:  # op == 2 → ARP Reply
-            ip = pkt[ARP].psrc     # Zdrojová IP adresa
-            mac = pkt[ARP].hwsrc   # Zdrojová MAC adresa
+        if pkt.haslayer(ARP) and pkt[ARP].op == 2:
 
-            # Validuj IP a MAC, aby sme ignorovali chybné pakety
+            now = time.time()
+            self.packet_times.append(now)  # PRE GRAF
+
+            ip = pkt[ARP].psrc
+            mac = pkt[ARP].hwsrc
+
             if not self._valid_ip(ip) or not self._valid_mac(mac):
-                return  # ignoruj paket
+                return
 
-            # Ak už túto IP poznáme, porovnáme jej MAC
             if ip in self.ip_mac_map:
                 if self.ip_mac_map[ip] != mac:
-                    now = time.time()
                     last_time = self.last_alert_time.get(ip, 0)
-                    # Rate limiting alertov - aspoň alert_cooldown sekúnd medzi alertami pre rovnakú IP
+
                     if now - last_time > self.alert_cooldown:
                         alert_msg = f"[ALERT] Possible ARP spoofing detected! IP {ip} is at {mac}, but was previously at {self.ip_mac_map[ip]}"
                         if self.alert_callback:
-                            self.alert_callback(alert_msg)  # odovzdáme alert späť do hlavnej aplikácie
+                            self.alert_callback(alert_msg)
                         else:
                             print(alert_msg)
+
                         self.last_alert_time[ip] = now
             else:
-                # Ak IP ešte nepoznáme, pridáme si ju do mapy
                 self.ip_mac_map[ip] = mac
 
-    def start(self, iface=None, network="10.0.2.0/24"):
+    def get_rate(self):
         """
-        Hlavná funkcia – najprv si načítame legitímne IP-MAC adresy a potom počúvame ARP odpovede.
-        Teraz používame AsyncSniffer pre bezpečné a rýchle ukončenie.
+        Vráti počet ARP paketov za poslednú sekundu.
+        Používa sa pre realtime graf.
         """
-        self.running = True
-        self.preload_known_macs(network)  # naskenujeme sieť na začiatku
+        now = time.time()
+        return len([t for t in self.packet_times if now - t <= 1])
 
-        # Inicializujeme asynchrónny sniffer
+    def start(self, iface=None, network="10.0.2.0/24"):
+        self.running = True
+        self.preload_known_macs(network)
+
         self.sniffer = AsyncSniffer(
             prn=self.packet_callback,
             filter="arp",
             store=False,
             iface=iface
         )
-        # AsyncSniffer spúšťa zachytávanie paketov na pozadí (v samostatnom vlákne),
-	# takže hlavný program môže pokračovať bez blokovania.
+
         self.sniffer.start()
 
     def stop(self):
-        """
-        Funkcia na zastavenie sniffovania.
-        Bezpečne zastaví AsyncSniffer.
-        """
         self.running = False
         if self.sniffer and self.sniffer.running:
-            self.sniffer.stop()
+            try:
+                self.sniffer.stop()
+            except:
+                pass

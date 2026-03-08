@@ -1,5 +1,6 @@
 # NetSentinel
-Mini projekt pre zariadenie Raspberry Pi, ktorý funguje na princípe IDS. Aplikácia monitoruje podozrivú sieťovú aktivitu na Raspberry Pi, zobrazuje bezpečnostné alerty v termináli a zároveň ich odosiela ako notifikácie na Discord server pomocou webhooku.
+Mini projekt pre zariadenie Raspberry Pi, ktorý funguje na princípe IDS/IPS. Aplikácia monitoruje podozrivú sieťovú aktivitu na Raspberry Pi, zobrazuje bezpečnostné alerty v termináli a zároveň ich odosiela ako notifikácie na Discord server pomocou webhooku.
+V prípade identifikácie útoku, ktorý trvá viac ako 10 sekund sa automaticky na IP adresu aplikuje `DENY` firewall pravidlo.
 
 ## Príprava prostredia
 Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostredie `venv` v priečinku NetSentinel.
@@ -30,6 +31,7 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 - `scanner_detect.py` - Detekcia skenovania zariadenia. Príklad použitia: `nmap -sS -sV <sieťova_adresa/veľkost_podsiete>`. Príkaz na zistenie podsiete `ip a`.
 - `device_scanner.py` - Zoznám aktuálnych zariadení na sieti.
 - `ping_flood.py` - Detekcia zahltenia požiadaviek typu `ping` v krátkom časovom intervale. Príklad otestovanie: `ping -f <IP_RPI>`.
+- `firewall.py` - Automatické zabanovanie IP v prípade detekcie útoku.
 
 ## Využitý hardware
 - `Raspberry Pi 3`
@@ -60,7 +62,7 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
   <i>Obrázok 3 Welcome in NetSentinel</i>
 </p>
 
-- Monitoring je aktívny a čaká na detekciu podozrivého správania.
+- Monitoring je aktívny a čaká na detekciu podozrivého správania. Zobrazuje Grafy pre sieťovú prevádzku ICMP, ARP a SYN paketov a rovnako ich počet za sekundu.
 
 <p align="center">
   <img src="Pictures/Monitoring_1.PNG" alt="Obrázok 4 Monitoring" width="700"/>
@@ -68,13 +70,31 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
   <i>Obrázok 4 Monitoring</i>
 </p>
 
+
+- Test detekcie útoku ping flood, zobrazenie sieťovej prevádzky paketov za sekundu.
+
+<p align="center">
+  <img src="Pictures/Pingflood.PNG" alt="Obrázok 5 Detekcia útoku ping flood" width="700"/>
+  <br>
+  <i>Obrázok 5 Detekcia útoku ping flood</i>
+</p>
+
+- Blokovanie IP adresy v prípade trvania útoku viac ako 10 sekúnd.
+
+<p align="center">
+  <img src="Pictures/Pingflood_blocked.PNG" alt="Obrázok 6 Detekcia útoku ping flood" width="700"/>
+  <br>
+  <i>Obrázok 6 Blokovanie útoku ping flood</i>
+</p>
+
 - Podozrivé správanie je odoslané do Discord roomky. Správa obsahuje IP adresu zariadenia, ktoré vykonáva podozrivú aktivitu a v prípade ARP útoku aj MAC adresu.
 
 <p align="center">
-  <img src="Pictures/Discord.PNG" alt="Obrázok 5 Discord notifikácie o podozrivej aktivite" width="700"/>
+  <img src="Pictures/Discord.PNG" alt="Obrázok 7 Discord notifikácie o podozrivej aktivite" width="700"/>
   <br>
-  <i>Obrázok 5 Discord notifikácie o podozrivej aktivite</i>
+  <i>Obrázok 7 Discord notifikácie o podozrivej aktivite</i>
 </p>
+
 
 ## Vylepšenia do budúcnosti 
 - Zachytávanie podozrivej aktivity aj na iné zariadenia ako RPI, prostredníctvom WLAN adaptéru, ktorý umožňuje monitor mode (chipset `Atheros AR9271`).
