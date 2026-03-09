@@ -102,3 +102,5 @@ Pred samotným vytvorením aplikácie je potrebné využívať virtuálne prostr
 
 ## Poznámky
 - Projekt slúži na vzdelávacie účely v oblasti kybernetickej bezpečnosti.
+- 
+#### Autor: Marián Hlavačka
